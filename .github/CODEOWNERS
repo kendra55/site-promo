@@ -1,0 +1,8 @@
+# CODEOWNERS - Variante solo
+
+- @kendra55
+  /.github/ @kendra55
+  /CONTRIBUTING.md @kendra55
+  /index.html @kendra55
+  /style.css @kendra55
+  /cartes/ @kendra55
