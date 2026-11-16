@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Hook Git « commit-msg » : refuse les messages qui ne suivent pas Conventional Commits.
+#   Activation (une fois par clone) : git config core.hooksPath .githooks
+#   Format : <type>(<portée optionnelle>)<! optionnel>: <description>
+#   Exemples acceptés : feat: ajoute la carte d'Alice
+#                       fix(accueil): corrige le lien vers la carte de Bob
+#                       docs!: réorganise CONTRIBUTING.md
+#   Les messages générés par Git (Merge…, Revert…, fixup!/squash!) sont acceptés.
+#   Contournement possible (git commit --no-verify) : ce hook est un confort,
+#   la vraie garantie se place côté serveur (CI, J2).
+# =============================================================================
+set -euo pipefail
+
+MSG_FILE="$1"
+# Première ligne non commentée du message
+FIRST_LINE="$(grep -v '^#' "$MSG_FILE" | head -n 1)"
+
+TYPES='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+PATTERN="^(${TYPES})(\([a-z0-9._/-]+\))?!?: [^ ].{0,71}$"
+
+if [[ "$FIRST_LINE" =~ ^(Merge|Revert\ \"|fixup!|squash!|amend!) ]]; then
+  exit 0
+fi
+
+if [[ "$FIRST_LINE" =~ $PATTERN ]]; then
+  exit 0
+fi
+
+cat >&2 <<MSG
+✖ Message refusé : il ne respecte pas Conventional Commits.
+  Reçu   : ${FIRST_LINE}
+  Attendu : <type>(<portée>): <description à l'impératif, 72 caractères max>
+  Types   : ${TYPES//|/, }
+  Exemple : feat: ajoute la carte d'Alice
+MSG
+exit 1
